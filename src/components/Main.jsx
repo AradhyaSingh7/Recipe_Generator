@@ -18,13 +18,37 @@ export default function Main() {
         }
     }, [recipe, loading]) 
 
+    // async function getRecipe() {
+    //     setLoading(true)
+    //     const recipeMarkdown = await getRecipeFromMistral(ingredients)
+    //     console.log("Recipe returned:", recipeMarkdown)
+    //     setRecipe(recipeMarkdown)
+    //     setLoading(false)
+    // }
+
     async function getRecipe() {
-        setLoading(true)
-        const recipeMarkdown = await getRecipeFromMistral(ingredients)
-        console.log("Recipe returned:", recipeMarkdown)
-        setRecipe(recipeMarkdown)
-        setLoading(false)
+    setLoading(true);
+    try {
+        const res = await fetch('/.netlify/functions/recipe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ingredients }),
+        });
+
+        const data = await res.json();
+
+        // Adjust this line based on how your AI response is structured
+        const recipeMarkdown = data?.choices?.[0]?.message?.content || "No recipe found.";
+        
+        console.log("Recipe returned:", recipeMarkdown);
+        setRecipe(recipeMarkdown);
+    } catch (err) {
+        console.error("Error fetching recipe:", err);
+        setRecipe("❌ Something went wrong while generating your recipe.");
+    } finally {
+        setLoading(false);
     }
+}
 
     function addIngredient(formData) {
         const newIngredient = formData.get("ingredient")
